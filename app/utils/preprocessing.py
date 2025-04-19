@@ -1,11 +1,31 @@
 import logging
 import pandas as pd
+from PIL import Image
+from torchvision import transforms
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from fastapi import HTTPException
 
 logging.basicConfig(level=logging.INFO)
 
+def preprocess_image(image_file):
+    image = Image.open(image_file).convert("RGB")
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225]),
+    ])
+    image_tensor = transform(image).unsqueeze(0)
+    return image_tensor
+
+def preprocess_image_maskrcnn(image_file):
+    image = Image.open(image_file).convert("RGB")
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+    image_tensor = transform(image)
+    return image_tensor
 
 def preprocess_data(file, target_column, task_type="classification"):
     try:
