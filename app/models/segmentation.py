@@ -16,7 +16,10 @@ with urllib.request.urlopen(url) as response:
     COCO_CLASS_NAMES = [line.decode('utf-8').strip() for line in response.readlines()]
 
 def load_maskrcnn_model(num_classes=len(COCO_CLASS_NAMES)):
-    model = models.detection.mask_rcnn.maskrcnn_resnet50_fpn_v2(pretrained=True)
+    try:
+        model = models.detection.mask_rcnn.maskrcnn_resnet50_fpn_v2(pretrained=True)
+    except:
+        return
     torch.save(model.state_dict(), config.MASKRCNN_MODEL_PATH)
     return model
 

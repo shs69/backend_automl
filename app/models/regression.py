@@ -9,42 +9,32 @@ import config
 
 
 def train_regression_model(file: UploadFile = File(...), target_column: str = ""):
-    try:
-        X_train, X_test, y_train, y_test, label_encoders = preprocess_data(file, target_column, task_type="regression")
+    X_train, X_test, y_train, y_test, label_encoders = preprocess_data(file, target_column, task_type="regression")
 
-        model = TPOTRegressor(verbosity=2, random_state=42, generations=10, population_size=50)
-        model.fit(X_train, y_train)
+    model = TPOTRegressor(verbosity=2, random_state=42, generations=10, population_size=50)
+    model.fit(X_train, y_train)
 
-        best_model = model.fitted_pipeline_
-        joblib.dump(best_model, config.REGRESSION_MODEL_PATH)
-        joblib.dump(label_encoders, config.ENCODERS_PATH)
+    best_model = model.fitted_pipeline_
+    joblib.dump(best_model, config.REGRESSION_MODEL_PATH)
+    joblib.dump(label_encoders, config.ENCODERS_PATH)
 
-        return {"message": "Модель регрессии успешно обучена и сохранена."}
-    except Exception as e:
-        logging.error(f"Ошибка при обучении модели регрессии: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Ошибка при обучении модели регрессии: {str(e)}")
+    return {"message": "Модель регрессии успешно обучена и сохранена."}
 
 def predict_regression_model(file: UploadFile = File(...)):
     model = load_model(config.REGRESSION_MODEL_PATH)
     if model is None:
-        raise HTTPException(status_code=404, detail="Модель регрессии не обучена. Сначала обучите модель.")
+        raise FileNotFoundError("Модель регрессии не обучена. Сначала обучите модель.")
 
     label_encoders = load_encoders()
 
-    try:
-        data = pd.read_csv(file.file)
+    data = pd.read_csv(file.file)
+    data = encode_data(data, label_encoders)
 
-        data = encode_data(data, label_encoders)
+    model_features = model.feature_names_in_
+    for feature in model_features:
+        if feature not in data.columns:
+            raise ValueError(f"Признак '{feature}' отсутствует в данных для предсказания.")
 
-        model_features = model.feature_names_in_
-        for feature in model_features:
-            if feature not in data.columns:
-                raise ValueError(f"Признак '{feature}' отсутствует в данных для предсказания.")
-
-        X = data[model_features]
-
-        predictions = model.predict(X)
-        return {"predictions": predictions.tolist()}
-    except Exception as e:
-        logging.error(f"Ошибка при выполнении предсказаний: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Ошибка при выполнении предсказаний: {str(e)}")
+    X = data[model_features]
+    predictions = model.predict(X)
+    return {"predictions": [round(pred, 2) for pred in predictions.tolist()]}

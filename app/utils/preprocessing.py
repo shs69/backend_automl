@@ -32,7 +32,7 @@ def preprocess_data(file, target_column, task_type="classification"):
         data = pd.read_csv(file.file)
 
         if target_column not in data.columns:
-            raise ValueError(f"Целевая колонка '{target_column}' не найдена в данных.")
+            raise ValueError(f"целевая колонка '{target_column}' не найдена в данных.")
 
         label_encoders = {}
         for col in data.select_dtypes(include=['object']).columns:
@@ -43,7 +43,7 @@ def preprocess_data(file, target_column, task_type="classification"):
 
         if task_type == "regression":
             if not pd.api.types.is_numeric_dtype(data[target_column]):
-                raise ValueError(f"Для задачи регрессии целевая колонка '{target_column}' должна быть числовой.")
+                raise ValueError(f"для задачи регрессии целевая колонка '{target_column}' должна быть числовой.")
         elif task_type == "classification":
             if data[target_column].dtype == "object":
                 le = LabelEncoder()

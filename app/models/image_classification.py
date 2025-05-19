@@ -7,6 +7,7 @@ import os
 import urllib
 from app.utils.preprocessing import preprocess_image
 
+
 url = "https://raw.githubusercontent.com/pytorch/hub/master/imagenet_classes.txt"
 
 with urllib.request.urlopen(url) as response:
